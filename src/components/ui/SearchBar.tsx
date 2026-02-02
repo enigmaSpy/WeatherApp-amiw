@@ -12,12 +12,13 @@ export const SearchBar = () => {
     if (data) {
       setAddress(data);
     }else{
-        //TODO: jakiś kolorek nie wiem, random item dla przypominajki
         console.log("Wynik = 323221xd");
     }
   };
   return (
-    <form onSubmit={(e)=>{
+    <form 
+      className="flex gap-2"
+      onSubmit={(e)=>{
         e.preventDefault();
         handleSearch(inputValue);
     }}>
@@ -27,8 +28,14 @@ export const SearchBar = () => {
         placeholder="Sprawdź pogode w"
         value={inputValue}
         onChange={(e) => setInputValue(e.target.value)}
+        className="w-full bg-slate-800 border border-slate-700 text-slate-100 text-sm rounded-xl 
+                   px-4 py-3 pr-12 
+                   placeholder:text-slate-500 
+                   focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500
+                   transition-all duration-300 ease-in-out
+                   hover:bg-slate-800/60"
       />
-      <button>Sprawdż</button>
+      <button className="text-blue-500 cursor-pointer hover:text-blue-400">Sprawdż</button>
     </form>
   );
 };

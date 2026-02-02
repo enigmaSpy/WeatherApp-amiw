@@ -1,7 +1,8 @@
 import { useContext, useEffect, useState } from "react";
 import { MainView } from "./components/layout/MainView";
 import { AddressContext } from "./context/AddressContext";
-import { fetchWeather } from "./utils/weatherUtils";
+import { fetchWeather, getWeatherBackground } from "./utils/weatherUtils";
+import { DailyView } from "./components/layout/DailyView";
 
 function App() {
   const [isLoading, setIsLoading] = useState(true);
@@ -58,11 +59,12 @@ function App() {
       getWeatherData(address.lat, address.lon);
     }
   }, [address]);
-
+  const bgGradient = getWeatherBackground(weather?.current?.weather_code);
   return (
-    <> 
+    <div className={`flex justify-center items-center flex-col min-h-screen w-full transition-colors duration-1000 bg-gradient-to-br ${bgGradient}`}> 
         <MainView weather={weather ? weather.current : null} isLoading={isLoading}/>
-    </>
+        <DailyView isLoading={isLoading} daily={weather?weather.daily:null}/>
+    </div>
   );
 }
 
