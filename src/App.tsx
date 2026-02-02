@@ -1,20 +1,21 @@
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { MainView } from "./components/layout/MainView";
-import { AddressProvider } from "./context/AddressContext";
+import { AddressContext } from "./context/AddressContext";
+import { fetchWeather } from "./utils/weatherUtils";
 
 function App() {
   const [isLoading, setIsLoading] = useState(true);
   const [weather, setWeather] = useState<WeatherResponse | null>(null);
+  
+  const context = useContext(AddressContext); 
+
+  const address = context?.address; 
+  const setAddress = context?.setAddress; 
+
   const getWeatherData = async (lat: number, lon: number) => {
+    setIsLoading(true);
     try {
-      setIsLoading(true);
-      const baseUrl = "https://api.open-meteo.com/v1/forecast";
-      const url = `${baseUrl}?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,wind_speed_10m,weather_code,wind_direction_10m&daily=weather_code,temperature_2m_max,temperature_2m_min&timezone=auto`;
-      const response = await fetch(url);
-      if (!response.ok) {
-        throw new Error("Błąd sieci");
-      }
-      const data = await response.json();
+      const data = await fetchWeather(lat, lon);
       setWeather({
         current: data.current,
         daily: data.daily,
@@ -27,53 +28,41 @@ function App() {
   };
 
   const getCurrentLocation = () => {
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (pos) => {
-          const lat = pos.coords.latitude;
-          const lon = pos.coords.longitude;
-          getWeatherData(lat, lon);
-        },
-        (error) => {
-          switch (error.code) {
-            case error.PERMISSION_DENIED:
-              console.error("Brak zgody użytkownika");
-              break;
-            case error.POSITION_UNAVAILABLE:
-              console.error("Niedostępna lokalizacja");
-              break;
-            case error.TIMEOUT:
-              console.error("timeout");
-              break;
-            default:
-              console.error("Błąd: ", error.message);
-              break;
-          }
-          getWeatherData(52.2449, 21.0119);
-        },
-        {
-          enableHighAccuracy: false,
-          timeout: 5000,
-        },
-      );
+    if (!navigator.geolocation) {
+       getWeatherData(52.2449, 21.0119);
+       return;
     }
-    getWeatherData(52.2449, 21.0119);
+
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        const { latitude, longitude } = pos.coords;
+        
+        if (setAddress) {
+            setAddress({ lat: latitude, lon: longitude, displayName: "Twoja lokalizacja" });
+        }
+      },
+      (error) => {
+        console.error("Błąd GPS:", error.message);
+        getWeatherData(52.2449, 21.0119);
+      },
+      { timeout: 5000 }
+    );
   };
 
   useEffect(() => {
     getCurrentLocation();
   }, []);
 
+  useEffect(() => {
+    if (address) {
+      getWeatherData(address.lat, address.lon);
+    }
+  }, [address]);
+
   return (
-    <AddressProvider>
-      <>
-        {!isLoading ? (
-          <MainView weather={weather ? weather.current : null} />
-        ) : (
-          <div>Ładowanie</div>
-        )}
-      </>
-    </AddressProvider>
+    <> 
+        <MainView weather={weather ? weather.current : null} isLoading={isLoading}/>
+    </>
   );
 }
 

@@ -1,31 +1,14 @@
 import { useContext, useState } from "react";
 import { AddressContext } from "../../context/AddressContext";
+import { getCoordsFromAddress } from "../../utils/geoUtils";
 
 export const SearchBar = () => {
   const [inputValue, setInputValue] = useState<string>("");
-  const {address, setAddress } = useContext(AddressContext)!;
+  const {setAddress } = useContext(AddressContext)!;
 
-  const getCoordsFromAddres = async (city: string): Promise<AddressData | null>=> {
-    try {
-    const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(city)}&format=json&limit=1`;
-
-    const response = await fetch(url);
-    const data = await response.json();
-
-    if (data.length === 0) return null;
-    return {
-      lat: parseFloat(data[0].lat),
-      lon: parseFloat(data[0].lon),
-      displayName: data[0].display_name,
-    };
-    } catch (error) {
-        console.error("Błąd połączenia", error);
-        return null;
-    }
-  };
   const handleSearch = async (city: string) => {
     if(!city.trim()) return;
-    const data = await getCoordsFromAddres(city);
+    const data = await getCoordsFromAddress(city);
     if (data) {
       setAddress(data);
     }else{
@@ -37,7 +20,6 @@ export const SearchBar = () => {
     <form onSubmit={(e)=>{
         e.preventDefault();
         handleSearch(inputValue);
-        console.log(address);
     }}>
       <input
         type="text"
